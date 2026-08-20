@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+**/node_modules/
+.venv/
+**/.venv/
+.node/
+**/.node/
+
+# Build artifacts
+dist/
+**/dist/
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# Environment variables
+.env
+**/.env
+!.env.example
+!**/.env.example
+
+# Archives
+*.zip
+project.zip
+deployment.zip
+project_combined.zip
+
+# System files
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
