@@ -47,15 +47,6 @@ export const Careers: React.FC = () => {
   return (
     <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-dark-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 animate-in fade-in duration-300">
-        
-        {/* Title */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <h2 className="text-xs font-bold text-orange-500 uppercase tracking-widest">JOIN THE TEAM</h2>
-          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Careers at ATOMAKK INDIA</h1>
-          <p className="text-slate-655 dark:text-slate-400 text-sm">
-            Work with metrology experts to build next-generation calibration instruments.
-          </p>
-        </div>
 
         {/* Core careers body */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

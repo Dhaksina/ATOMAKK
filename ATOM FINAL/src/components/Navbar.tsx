@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Menu, X, ChevronDown, Sun, Moon, Scale, Search, 
   ShoppingCart, Shield, Trash2, ArrowRight, Activity,
-  Thermometer, Gauge, Cpu, Database
+  Thermometer, Gauge, Cpu, Database, Layers, Zap
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Logo3D } from './Logo3D';
@@ -67,6 +67,8 @@ export const Navbar: React.FC = () => {
       case 'Gauge': return <Gauge className="w-5 h-5 text-orange-500" />;
       case 'Cpu': return <Cpu className="w-5 h-5 text-red-500" />;
       case 'Database': return <Database className="w-5 h-5 text-purple-500" />;
+      case 'Layers': return <Layers className="w-5 h-5 text-indigo-500" />;
+      case 'Zap': return <Zap className="w-5 h-5 text-amber-500" />;
       default: return <Activity className="w-5 h-5 text-teal-500" />;
     }
   };
@@ -123,7 +125,7 @@ export const Navbar: React.FC = () => {
                       </Link>
                     </div>
                     <div className="space-y-4">
-                      {categories.slice(0, 3).map(cat => (
+                      {categories.slice(0, Math.ceil(categories.length / 2)).map(cat => (
                         <Link 
                           key={cat.id} 
                           to={`/products?category=${cat.id}`}
@@ -140,7 +142,7 @@ export const Navbar: React.FC = () => {
                       ))}
                     </div>
                     <div className="space-y-4">
-                      {categories.slice(3).map(cat => (
+                      {categories.slice(Math.ceil(categories.length / 2)).map(cat => (
                         <Link 
                           key={cat.id} 
                           to={`/products?category=${cat.id}`}

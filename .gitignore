@@ -28,4 +28,6 @@ project_combined.zip
 .DS_Store
 **/.DS_Store
 Thumbs.db
+.firebase/
+**/.firebase/
 

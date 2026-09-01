@@ -690,10 +690,10 @@ export const initialCatalogItems: CatalogItem[] = [
     id: 'atom-complete-catalogue',
     name: 'ATOMAKK Instruments Complete Product Catalogue 2026',
     desc: 'Master product catalogue featuring temperature block calibrators, pressure pumps, data acquisition loggers, and ultrasonic flow meters.',
-    type: 'PDF Corporate Catalogue (8.6 MB)',
+    type: 'PDF Corporate Catalogue (9.2 MB)',
     category: 'corporate',
-    url: '/brochures/CAL-4000_datasheet.pdf',
-    createdAt: '2026-08-06T10:00:00Z'
+    url: '/brochures/ATOMAKK_Product_Catalogue_2026.pdf',
+    createdAt: '2026-08-24T10:00:00Z'
   }
 ];
 

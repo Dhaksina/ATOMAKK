@@ -242,8 +242,8 @@ export const generateProductPDF = async (product: Product) => {
   doc.text('ATOMAKK', 130, 204.5);
   doc.setTextColor(255, 255, 255);
   doc.text('+91 9789877567', 150, 204.5);
-  doc.text('info@atomakk.com', 190, 204.5);
-  doc.text('www.atomakkindia.com', 238, 204.5);
+  doc.text('atomakkindia@gmail.com', 190, 204.5);
+  doc.text('www.atomakk.com', 238, 204.5);
 
   // Save the PDF
   const filename = `${product.name.replace(/[^a-zA-Z0-9]/g, '_')}_Datasheet.pdf`;

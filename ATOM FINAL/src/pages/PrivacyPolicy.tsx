@@ -26,7 +26,7 @@ export const PrivacyPolicy: React.FC = () => {
         </p>
 
         <p className="text-xs text-slate-500 pt-4 border-t border-slate-100 dark:border-slate-800">
-          Last updated: July 2026. For inquiries, email support@atomakk.com.
+          Last updated: July 2026. For inquiries, email atomakkindia@gmail.com.
         </p>
       </div>
     </div>

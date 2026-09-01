@@ -4,10 +4,10 @@ import {
   Lock, LayoutDashboard, Plus, Trash2, Eye, EyeOff, Mail, FileText, 
   Check, LogOut, Package, RefreshCw, Layers, ShieldCheck, Thermometer,
   Gauge, Cpu, Database, Activity, Star, Pencil, X, Upload, Image as ImageIcon, Paperclip, AlertTriangle,
-  HardDriveDownload, BookOpen
+  HardDriveDownload, BookOpen, Zap, Scale, Radio, HardDrive, Wrench, Flame, Sliders, Box, Tag, FolderPlus
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { Product, CatalogItem } from '../db/mockData';
+import { Product, CatalogItem, Category } from '../db/mockData';
 import { GlassCard } from '../components/GlassCard';
 import { uploadFileToSupabase, isSupabaseConfigured } from '../config/supabase';
 import { uploadFileToFirebase } from '../config/firebase';
@@ -18,7 +18,8 @@ export const AdminDashboard: React.FC = () => {
     quoteRequests, updateQuoteStatus, deleteQuoteRequest,
     contactInquiries, updateInquiryStatus, deleteContactInquiry,
     addProduct, deleteProduct, editProduct, isFirebaseConnected, syncAllToCloud,
-    catalogItems, addCatalogItem, editCatalogItem, deleteCatalogItem
+    catalogItems, addCatalogItem, editCatalogItem, deleteCatalogItem,
+    addCategory, editCategory, deleteCategory
   } = useApp();
 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -59,7 +60,7 @@ export const AdminDashboard: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'quotes' | 'inquiries' | 'catalogs'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'catalogs' | 'quotes' | 'inquiries'>('products');
   
   // Add Product Form state
   const [showAddForm, setShowAddForm] = useState(false);
@@ -79,7 +80,7 @@ export const AdminDashboard: React.FC = () => {
   // Edit Product Form state
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editName, setEditName] = useState('');
-  const [editCategory, setEditCategory] = useState('');
+  const [editProductCategory, setEditProductCategory] = useState('');
   const [editShortDesc, setEditShortDesc] = useState('');
   const [editLongDesc, setEditLongDesc] = useState('');
   const [editFeatures, setEditFeatures] = useState('');
@@ -109,6 +110,19 @@ export const AdminDashboard: React.FC = () => {
   const [editCatalogDesc, setEditCatalogDesc] = useState('');
   const [editCatalogType, setEditCatalogType] = useState('');
   const [editCatalogUrl, setEditCatalogUrl] = useState('');
+
+  // Category Form states
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatId, setNewCatId] = useState('');
+  const [newCatDesc, setNewCatDesc] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState('Activity');
+
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editCatName, setEditCatName] = useState('');
+  const [editCatId, setEditCatId] = useState('');
+  const [editCatDesc, setEditCatDesc] = useState('');
+  const [editCatIcon, setEditCatIcon] = useState('Activity');
 
   const [uploadingCatalogPdf, setUploadingCatalogPdf] = useState(false);
 
@@ -319,7 +333,7 @@ export const AdminDashboard: React.FC = () => {
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
     setEditName(product.name);
-    setEditCategory(product.category);
+    setEditProductCategory(product.category);
     setEditShortDesc(product.shortDescription);
     setEditLongDesc(product.longDescription);
     setEditFeatures(product.features ? product.features.join(', ') : '');
@@ -343,7 +357,7 @@ export const AdminDashboard: React.FC = () => {
 
     editProduct(editingProduct.id, {
       name: editName,
-      category: editCategory,
+      category: editProductCategory,
       shortDescription: editShortDesc,
       longDescription: editLongDesc,
       features: featuresArray.length > 0 ? featuresArray : editingProduct.features,
@@ -417,14 +431,102 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const getCategoryIcon = (catId: string, sizeClass = "w-4 h-4") => {
-    switch (catId) {
+  const availableCategoryIcons = [
+    { name: 'Thermometer', label: 'Temperature' },
+    { name: 'Gauge', label: 'Pressure' },
+    { name: 'Cpu', label: 'Process / Micro' },
+    { name: 'Database', label: 'Data Loggers' },
+    { name: 'Activity', label: 'Flow & Signals' },
+    { name: 'Layers', label: 'Multirange / Modular' },
+    { name: 'Zap', label: 'Electrical / Power' },
+    { name: 'Scale', label: 'Mass & Force' },
+    { name: 'ShieldCheck', label: 'Standards & Verification' },
+    { name: 'Radio', label: 'RF / Wireless' },
+    { name: 'HardDrive', label: 'Storage & Acquisition' },
+    { name: 'Wrench', label: 'Mechanical & Tools' },
+    { name: 'Flame', label: 'Thermal & High-Heat' },
+    { name: 'Sliders', label: 'Control & Tuning' },
+    { name: 'Box', label: 'Accessories & Fixtures' },
+  ];
+
+  const getCategoryIcon = (iconOrId: string, sizeClass = "w-4 h-4") => {
+    const matched = categories.find(c => c.id === iconOrId);
+    const key = matched?.iconName || iconOrId;
+
+    switch (key) {
+      case 'Thermometer':
       case 'temperature': return <Thermometer className={`${sizeClass} text-blue-500`} />;
+      case 'Gauge':
       case 'pressure': return <Gauge className={`${sizeClass} text-orange-500`} />;
+      case 'Cpu':
       case 'process': return <Cpu className={`${sizeClass} text-red-500`} />;
+      case 'Database':
       case 'logger': return <Database className={`${sizeClass} text-purple-500`} />;
+      case 'Layers': return <Layers className={`${sizeClass} text-indigo-500`} />;
+      case 'Zap': return <Zap className={`${sizeClass} text-amber-500`} />;
+      case 'Scale': return <Scale className={`${sizeClass} text-emerald-500`} />;
+      case 'ShieldCheck': return <ShieldCheck className={`${sizeClass} text-green-500`} />;
+      case 'Radio': return <Radio className={`${sizeClass} text-cyan-500`} />;
+      case 'HardDrive': return <HardDrive className={`${sizeClass} text-violet-500`} />;
+      case 'Wrench': return <Wrench className={`${sizeClass} text-rose-500`} />;
+      case 'Flame': return <Flame className={`${sizeClass} text-red-600`} />;
+      case 'Sliders': return <Sliders className={`${sizeClass} text-blue-400`} />;
+      case 'Box': return <Box className={`${sizeClass} text-yellow-500`} />;
       default: return <Activity className={`${sizeClass} text-teal-500`} />;
     }
+  };
+
+  const handleAddCategorySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+
+    addCategory({
+      id: newCatId.trim() || undefined,
+      name: newCatName.trim(),
+      description: newCatDesc.trim() || `${newCatName.trim()} calibration instruments and testing standards.`,
+      iconName: newCatIcon
+    });
+
+    setNewCatName('');
+    setNewCatId('');
+    setNewCatDesc('');
+    setNewCatIcon('Activity');
+    setShowAddCategoryModal(false);
+  };
+
+  const openEditCategoryModal = (cat: Category) => {
+    setEditingCategory(cat);
+    setEditCatName(cat.name);
+    setEditCatId(cat.id);
+    setEditCatDesc(cat.description);
+    setEditCatIcon(cat.iconName || 'Activity');
+  };
+
+  const handleEditCategorySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCategory || !editCatName.trim()) return;
+
+    editCategory(editingCategory.id, {
+      name: editCatName.trim(),
+      description: editCatDesc.trim(),
+      iconName: editCatIcon
+    });
+
+    setEditingCategory(null);
+  };
+
+  const handleDeleteCategory = (catId: string, catName: string) => {
+    const productsInCat = products.filter(p => p.category === catId).length;
+    if (productsInCat > 0) {
+      const confirmDelete = window.confirm(
+        `Notice: There are ${productsInCat} product(s) currently categorized under "${catName}". Deleting this category will remove it from the category list while products remain preserved. Do you want to continue?`
+      );
+      if (!confirmDelete) return;
+    } else {
+      const confirmDelete = window.confirm(`Are you sure you want to delete the category "${catName}"?`);
+      if (!confirmDelete) return;
+    }
+    deleteCategory(catId);
   };
 
   // 1. LOGIN SCREEN GATEWAY
@@ -516,7 +618,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Tab Selection */}
-        <div className="flex flex-wrap bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 max-w-2xl gap-1">
+        <div className="flex flex-wrap bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 max-w-3xl gap-1">
           <button 
             onClick={() => setActiveTab('products')}
             className={`flex-1 min-w-[120px] py-2.5 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
@@ -525,6 +627,15 @@ export const AdminDashboard: React.FC = () => {
           >
             <Package className="w-4 h-4" />
             <span>Products ({products.length})</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('categories')}
+            className={`flex-1 min-w-[130px] py-2.5 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
+              activeTab === 'categories' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>Categories ({categories.length})</span>
           </button>
           <button 
             onClick={() => setActiveTab('catalogs')}
@@ -1316,6 +1427,98 @@ export const AdminDashboard: React.FC = () => {
             </div>
           )}
 
+          {/* TAB 5: CATEGORIES MANAGEMENT */}
+          {activeTab === 'categories' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-extrabold text-xl text-slate-900 dark:text-white uppercase tracking-wider">
+                    Instrument Categories ({categories.length})
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Create new categories, update names, descriptions, and customize visual icon badges across the platform.
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <button 
+                    onClick={() => {
+                      setNewCatName('');
+                      setNewCatId('');
+                      setNewCatDesc('');
+                      setNewCatIcon('Activity');
+                      setShowAddCategoryModal(true);
+                    }}
+                    className="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-md flex items-center space-x-1.5 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create New Category</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Categories Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {categories.map(cat => {
+                  const productCount = products.filter(p => p.category === cat.id).length;
+                  return (
+                    <GlassCard key={cat.id} className="p-6 flex flex-col justify-between group" hoverEffect={false}>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                            {getCategoryIcon(cat.id, "w-6 h-6")}
+                          </div>
+                          <div className="flex flex-col items-end space-y-1">
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50">
+                              id: {cat.id}
+                            </span>
+                            <span className="text-[10px] font-bold text-orange-500">
+                              {productCount} {productCount === 1 ? 'Product' : 'Products'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <h4 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-orange-500 transition-colors">
+                            {cat.name}
+                          </h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            {cat.description || 'No description provided.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-850 flex items-center justify-between gap-2">
+                        <Link 
+                          to={`/products?category=${cat.id}`}
+                          className="text-[11px] font-bold text-blue-500 hover:text-orange-500 flex items-center space-x-1 transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View in Catalogue</span>
+                        </Link>
+                        <div className="flex items-center space-x-2">
+                          <button 
+                            onClick={() => openEditCategoryModal(cat)}
+                            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-orange-500 hover:text-white transition-colors"
+                            title="Edit Category"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-red-500 hover:text-white transition-colors"
+                            title="Delete Category"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </GlassCard>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -1353,8 +1556,8 @@ export const AdminDashboard: React.FC = () => {
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Category *</label>
                   <select 
-                    value={editCategory}
-                    onChange={(e) => setEditCategory(e.target.value)}
+                    value={editProductCategory}
+                    onChange={(e) => setEditProductCategory(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-850 px-3.5 py-2.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 text-slate-800 dark:text-white text-xs outline-none focus:border-orange-500 transition-all"
                   >
                     {categories.map(c => (
@@ -1731,6 +1934,204 @@ export const AdminDashboard: React.FC = () => {
                 <button 
                   type="button" 
                   onClick={() => setEditingCatalogItem(null)}
+                  className="px-6 py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-350 font-bold text-xs rounded-xl transition-colors uppercase tracking-wider"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD CATEGORY MODAL OVERLAY */}
+      {showAddCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 max-w-xl w-full shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="font-extrabold text-xl text-slate-900 dark:text-white uppercase tracking-wider">
+                  Create New Category
+                </h3>
+                <p className="text-xs text-slate-400">Add a new calibration classification to your catalog.</p>
+              </div>
+              <button 
+                onClick={() => setShowAddCategoryModal(false)}
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddCategorySubmit} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+                  Category Name * (e.g. Electrical Calibrators)
+                </label>
+                <input 
+                  type="text" 
+                  required
+                  value={newCatName}
+                  onChange={(e) => {
+                    setNewCatName(e.target.value);
+                    if (!newCatId || newCatId === newCatName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')) {
+                      setNewCatId(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
+                    }
+                  }}
+                  placeholder="e.g. Electrical & RF Calibrators"
+                  className="w-full bg-slate-50 dark:bg-slate-850 px-3.5 py-2.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 text-slate-800 dark:text-white text-xs outline-none focus:border-orange-500 transition-all font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+                  Category ID Slug (Auto-generated or custom identifier)
+                </label>
+                <input 
+                  type="text" 
+                  value={newCatId}
+                  onChange={(e) => setNewCatId(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  placeholder="e.g. electrical-rf"
+                  className="w-full bg-slate-50 dark:bg-slate-850 px-3.5 py-2.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 text-slate-800 dark:text-white text-xs font-mono outline-none focus:border-orange-500 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+                  Description *
+                </label>
+                <textarea 
+                  required
+                  value={newCatDesc}
+                  onChange={(e) => setNewCatDesc(e.target.value)}
+                  placeholder="Short description of this instrument category..."
+                  rows={3}
+                  className="w-full bg-slate-50 dark:bg-slate-850 px-3.5 py-2.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 text-slate-800 dark:text-white text-xs outline-none focus:border-orange-500 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+                  Select Visual Category Icon
+                </label>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {availableCategoryIcons.map(icon => (
+                    <button
+                      key={icon.name}
+                      type="button"
+                      onClick={() => setNewCatIcon(icon.name)}
+                      className={`p-2.5 rounded-xl border flex flex-col items-center justify-center space-y-1.5 transition-all ${
+                        newCatIcon === icon.name 
+                          ? 'border-orange-500 bg-orange-500/10 text-orange-500 font-bold shadow-sm' 
+                          : 'border-slate-200/60 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      }`}
+                    >
+                      {getCategoryIcon(icon.name, "w-5 h-5")}
+                      <span className="text-[9px] truncate w-full text-center">{icon.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button 
+                  type="submit" 
+                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-orange-500 hover:from-blue-700 hover:to-orange-600 text-white font-bold text-xs rounded-xl shadow transition-colors uppercase tracking-wider"
+                >
+                  Create Category
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setShowAddCategoryModal(false)}
+                  className="px-6 py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-350 font-bold text-xs rounded-xl transition-colors uppercase tracking-wider"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT CATEGORY MODAL OVERLAY */}
+      {editingCategory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 max-w-xl w-full shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="font-extrabold text-xl text-slate-900 dark:text-white uppercase tracking-wider">
+                  Edit Category
+                </h3>
+                <p className="text-xs text-slate-400 font-mono">ID: {editingCategory.id}</p>
+              </div>
+              <button 
+                onClick={() => setEditingCategory(null)}
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditCategorySubmit} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+                  Category Name *
+                </label>
+                <input 
+                  type="text" 
+                  required
+                  value={editCatName}
+                  onChange={(e) => setEditCatName(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-850 px-3.5 py-2.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 text-slate-800 dark:text-white text-xs outline-none focus:border-orange-500 transition-all font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+                  Description *
+                </label>
+                <textarea 
+                  required
+                  value={editCatDesc}
+                  onChange={(e) => setEditCatDesc(e.target.value)}
+                  rows={3}
+                  className="w-full bg-slate-50 dark:bg-slate-850 px-3.5 py-2.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 text-slate-800 dark:text-white text-xs outline-none focus:border-orange-500 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+                  Select Visual Category Icon
+                </label>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {availableCategoryIcons.map(icon => (
+                    <button
+                      key={icon.name}
+                      type="button"
+                      onClick={() => setEditCatIcon(icon.name)}
+                      className={`p-2.5 rounded-xl border flex flex-col items-center justify-center space-y-1.5 transition-all ${
+                        editCatIcon === icon.name 
+                          ? 'border-orange-500 bg-orange-500/10 text-orange-500 font-bold shadow-sm' 
+                          : 'border-slate-200/60 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      }`}
+                    >
+                      {getCategoryIcon(icon.name, "w-5 h-5")}
+                      <span className="text-[9px] truncate w-full text-center">{icon.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button 
+                  type="submit" 
+                  className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow transition-colors uppercase tracking-wider"
+                >
+                  Save Changes
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setEditingCategory(null)}
                   className="px-6 py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-350 font-bold text-xs rounded-xl transition-colors uppercase tracking-wider"
                 >
                   Cancel

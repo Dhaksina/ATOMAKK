@@ -3,11 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   ArrowRight, ShieldCheck, Award, Zap, Users, Factory, Headset, 
   MapPin, CheckCircle2, ChevronRight, Download, Thermometer,
-  Gauge, Cpu, Database, Activity, Star, Quote
+  Gauge, Cpu, Database, Activity
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { GlassCard } from '../components/GlassCard';
-import { testimonials, categories } from '../db/mockData';
 import { Logo3D } from '../components/Logo3D';
 import { CreativeLogoShowcase } from '../components/CreativeLogoShowcase';
 
@@ -46,7 +45,7 @@ const AnimatedCounter: React.FC<{ target: number; suffix?: string; label: string
 };
 
 export const Home: React.FC = () => {
-  const { products } = useApp();
+  const { products, categories } = useApp();
   const location = useLocation();
 
   // Scroll to section based on query parameter (?scroll=about or ?scroll=services)
@@ -72,10 +71,14 @@ export const Home: React.FC = () => {
 
   const getCategoryIcon = (iconName: string, sizeClass = "w-8 h-8") => {
     switch (iconName) {
-      case 'Thermometer': return <Thermometer className={`${sizeClass} text-blue-500`} />;
-      case 'Gauge': return <Gauge className={`${sizeClass} text-orange-500`} />;
-      case 'Cpu': return <Cpu className={`${sizeClass} text-red-500`} />;
-      case 'Database': return <Database className={`${sizeClass} text-purple-500`} />;
+      case 'Thermometer':
+      case 'temperature': return <Thermometer className={`${sizeClass} text-blue-500`} />;
+      case 'Gauge':
+      case 'pressure': return <Gauge className={`${sizeClass} text-orange-500`} />;
+      case 'Cpu':
+      case 'process': return <Cpu className={`${sizeClass} text-red-500`} />;
+      case 'Database':
+      case 'logger': return <Database className={`${sizeClass} text-purple-500`} />;
       default: return <Activity className={`${sizeClass} text-teal-500`} />;
     }
   };
@@ -468,48 +471,6 @@ export const Home: React.FC = () => {
               <h4 className="font-bold text-base text-white">Expert Support</h4>
               <p className="text-xs text-slate-400 leading-relaxed">Direct support from instrumentation engineers for insert customization and recalibration.</p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. TESTIMONIALS */}
-      <section className="py-24 bg-white dark:bg-dark-bg border-t border-slate-100 dark:border-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <h2 className="text-xs font-bold text-orange-500 uppercase tracking-widest">REVIEWS</h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">
-              Trusted by Top Metrologists
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">
-              See what lead calibrators and audit auditors from pharma, power, and manufacturing say.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {testimonials.map(t => (
-              <GlassCard key={t.id} className="p-6 flex flex-col justify-between relative group hover:border-orange-500/30">
-                <Quote className="absolute top-6 right-6 w-8 h-8 text-slate-150 dark:text-slate-800" />
-                <div className="space-y-4">
-                  <div className="flex space-x-1">
-                    {[...Array(t.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed italic">
-                    "{t.text}"
-                  </p>
-                </div>
-                <div className="mt-8 pt-4 border-t border-slate-150 dark:border-slate-800 flex items-center space-x-4">
-                  <div className="w-10 h-10 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center font-bold text-xs">
-                    {t.logoText}
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-sm text-slate-900 dark:text-white">{t.name}</h5>
-                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{t.role}, {t.company}</p>
-                  </div>
-                </div>
-              </GlassCard>
-            ))}
           </div>
         </div>
       </section>

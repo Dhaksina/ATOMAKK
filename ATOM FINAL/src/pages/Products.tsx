@@ -54,10 +54,17 @@ export const Products: React.FC = () => {
   };
 
   const getCategoryIcon = (catId: string, sizeClass = "w-4 h-4") => {
-    switch (catId) {
+    const matched = categories.find(c => c.id === catId);
+    const key = matched?.iconName || catId;
+
+    switch (key) {
+      case 'Thermometer':
       case 'temperature': return <Thermometer className={`${sizeClass} text-blue-500`} />;
+      case 'Gauge':
       case 'pressure': return <Gauge className={`${sizeClass} text-orange-500`} />;
+      case 'Cpu':
       case 'process': return <Cpu className={`${sizeClass} text-red-500`} />;
+      case 'Database':
       case 'logger': return <Database className={`${sizeClass} text-purple-500`} />;
       default: return <Activity className={`${sizeClass} text-teal-500`} />;
     }

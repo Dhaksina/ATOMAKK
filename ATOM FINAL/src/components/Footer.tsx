@@ -1,28 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   Mail, Phone, MapPin, Globe, Video,
-  ArrowRight, CheckCircle, Scale, Shield, FileText, Send
+  ArrowRight, Shield, FileText, Send
 } from 'lucide-react';
 import { Logo3D } from './Logo3D';
 
 export const Footer: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail('');
-      setTimeout(() => setSubscribed(false), 4000);
-    }
-  };
-
   return (
     <footer className="bg-slate-900 text-slate-350 pt-16 pb-8 border-t border-slate-800 dark:bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
 
           {/* Company Brief & Socials */}
           <div className="space-y-6">
@@ -111,48 +99,12 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/careers" className="hover:text-white hover:translate-x-1.5 transition-all inline-flex items-center space-x-1 group">
-                  <ArrowRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-orange-500" />
-                  <span>Careers</span>
-                </Link>
-              </li>
-              <li>
                 <Link to="/admin" className="hover:text-white hover:translate-x-1.5 transition-all inline-flex items-center space-x-1 group">
                   <Shield className="w-3.5 h-3.5 text-slate-600 group-hover:text-orange-500" />
                   <span>Admin Console</span>
                 </Link>
               </li>
             </ul>
-          </div>
-
-          {/* Newsletter / Map Info */}
-          <div className="space-y-5">
-            <h3 className="text-white font-bold text-base border-l-2 border-orange-500 pl-3">Newsletter</h3>
-            <p className="text-sm text-slate-400">Subscribe for technical releases, new calibration models, and guides.</p>
-
-            <form onSubmit={handleSubscribe} className="relative">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email address"
-                required
-                className="w-full bg-slate-800 text-white placeholder-slate-500 text-sm px-4 py-3 rounded-xl border border-slate-750 focus:border-orange-500 outline-none pr-10"
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-2 p-1.5 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-
-            {subscribed && (
-              <div className="text-xs text-emerald-400 flex items-center space-x-1.5 animate-bounce">
-                <CheckCircle className="w-4 h-4" />
-                <span>Thank you! Successfully subscribed.</span>
-              </div>
-            )}
           </div>
         </div>
 
@@ -173,7 +125,7 @@ export const Footer: React.FC = () => {
             </div>
             <div>
               <p className="text-xs text-slate-500">Email Inquiry</p>
-              <p className="text-white font-semibold">sales@atomakk.com</p>
+              <p className="text-white font-semibold">atomakkindia@gmail.com</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">

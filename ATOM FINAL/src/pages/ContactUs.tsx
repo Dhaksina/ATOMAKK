@@ -71,8 +71,7 @@ export const ContactUs: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-900 dark:text-white">Email Correspondence</h4>
-                    <p className="text-slate-600 dark:text-slate-400 mt-0.5">sales@atomakk.com</p>
-                    <p className="text-slate-600 dark:text-slate-400">support@atomakk.com</p>
+                    <p className="text-slate-600 dark:text-slate-400 mt-0.5">atomakkindia@gmail.com</p>
                   </div>
                 </div>
 

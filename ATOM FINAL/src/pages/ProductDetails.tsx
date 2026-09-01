@@ -76,6 +76,17 @@ export const ProductDetails: React.FC = () => {
     setDownloading(true);
     let pdfUrl = targetPdfUrl || (pdfType === 'Manual' ? product.manualUrl || product.datasheetUrl : product.datasheetUrl) || `/brochures/${product.name.replace(/\s+/g, '-')}_datasheet.pdf`;
     
+    // 1. Handle Google Drive URLs
+    if (pdfUrl.includes('drive.google.com')) {
+      const match = pdfUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        pdfUrl = `https://drive.google.com/file/d/${match[1]}/view`;
+      }
+      window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+      setDownloading(false);
+      return;
+    }
+
     // Convert Base64 data URLs to Blob Object URLs so Chrome opens & downloads them seamlessly
     let blobObjectUrl: string | null = null;
     if (pdfUrl.startsWith('data:')) {
@@ -507,21 +518,6 @@ export const ProductDetails: React.FC = () => {
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
                     Precision-engineered structure featuring a heavy-duty industrial chassis designed for stable sub-zero operations. Equipped with dual structural handle knobs for secure portability, anti-slip stabilizer pads, and a brush-finished stainless steel top plate housing the dry block insert alongside the built-in PID temperature controller display.
                   </p>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span className="text-xs text-slate-400 font-semibold block">Well Block Depth</span>
-                    <span className="text-base font-extrabold text-slate-900 dark:text-white mt-0.5 block">{product.specs?.['Well Depth'] || '150 mm'}</span>
-                  </div>
-                  <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span className="text-xs text-slate-400 font-semibold block">Well Diameter</span>
-                    <span className="text-base font-extrabold text-slate-900 dark:text-white mt-0.5 block">{product.specs?.['Well Diameter'] || '30 mm'}</span>
-                  </div>
-                  <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span className="text-xs text-slate-400 font-semibold block">Power Rating</span>
-                    <span className="text-base font-extrabold text-slate-900 dark:text-white mt-0.5 block">{product.specs?.['Power Supply'] || '230 VAC'}</span>
-                  </div>
                 </div>
               </div>
 

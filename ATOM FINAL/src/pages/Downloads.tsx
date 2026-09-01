@@ -12,18 +12,52 @@ export const Downloads: React.FC = () => {
 
   const handleDownload = (id: string, name: string, fileUrl?: string) => {
     setDownloadingId(id);
-    const targetUrl = fileUrl || '/brochures/CAL-4000_datasheet.pdf';
+    let targetUrl = fileUrl || '/brochures/CAL-4000_datasheet.pdf';
 
-    // Open PDF in new browser tab
+    // 1. Handle Google Drive URLs
+    if (targetUrl.includes('drive.google.com')) {
+      const match = targetUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        targetUrl = `https://drive.google.com/file/d/${match[1]}/view`;
+      }
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      setDownloadingId(null);
+      return;
+    }
+
+    // 2. Convert Base64 data URLs to Blob Object URLs so Chrome/Safari opens & downloads them seamlessly
+    let blobObjectUrl: string | null = null;
+    if (targetUrl.startsWith('data:')) {
+      try {
+        const parts = targetUrl.split(';base64,');
+        const mime = parts[0].replace('data:', '') || 'application/pdf';
+        const binary = atob(parts[1]);
+        const array = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          array[i] = binary.charCodeAt(i);
+        }
+        const blob = new Blob([array], { type: mime });
+        targetUrl = URL.createObjectURL(blob);
+        blobObjectUrl = targetUrl;
+      } catch (e) {
+        console.warn('Failed to convert base64 to Blob URL:', e);
+      }
+    }
+
+    // 3. Open PDF in new browser tab
     window.open(targetUrl, '_blank');
 
-    // Trigger file download fallback
+    // 4. Trigger file download fallback
     const link = document.createElement('a');
     link.href = targetUrl;
     link.download = `${name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    if (blobObjectUrl) {
+      setTimeout(() => URL.revokeObjectURL(blobObjectUrl!), 15000);
+    }
 
     setTimeout(() => {
       setDownloadingId(null);

@@ -51,6 +51,11 @@ interface AppContextType {
   addProduct: (product: Omit<Product, 'id'>) => void;
   editProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
+
+  // Category CRUD
+  addCategory: (category: Omit<Category, 'id'> & { id?: string }) => void;
+  editCategory: (id: string, category: Partial<Category>) => void;
+  deleteCategory: (id: string) => void;
   
   // Catalog / Downloads CRUD
   addCatalogItem: (item: Omit<CatalogItem, 'id'>) => void;
@@ -155,7 +160,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  const [categories] = useState<Category[]>(initialCategories);
+  const [categories, setCategories] = useState<Category[]>(() => {
+    const saved = localStorage.getItem('categories');
+    if (!saved) return initialCategories;
+    try {
+      const parsed: Category[] = JSON.parse(saved);
+      const parsedIds = new Set(parsed.map(c => c.id));
+      const missingInitials = initialCategories.filter(c => !parsedIds.has(c.id));
+      return missingInitials.length > 0 ? [...parsed, ...missingInitials] : parsed;
+    } catch (e) {
+      return initialCategories;
+    }
+  });
 
   const [quoteRequests, setQuoteRequests] = useState<QuoteRequest[]>(() => {
     const saved = localStorage.getItem('quoteRequests');
@@ -180,8 +196,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const initialIds = new Set(initialCatalogItems.map(c => c.id));
       const userCustomItems = parsed.filter(c => c.id.startsWith('catalog-') && !c.id.includes('50-turns') && !c.id.includes('range-catalogue'));
       const existingInitials = parsed.filter(c => initialIds.has(c.id));
+      const updatedExistingInitials = existingInitials.map(c => {
+        const matching = initialCatalogItems.find(p => p.id === c.id);
+        if (matching && (c.url === '/brochures/CAL-4000_datasheet.pdf' || !c.url || c.url.includes('CAL-4000'))) {
+          return { ...c, ...matching };
+        }
+        return c;
+      });
       const missingInitials = initialCatalogItems.filter(c => !existingInitials.some(p => p.id === c.id));
-      const cleaned = [...missingInitials, ...existingInitials, ...userCustomItems];
+      const cleaned = [...missingInitials, ...updatedExistingInitials, ...userCustomItems];
       try {
         localStorage.setItem('catalogItems', JSON.stringify(cleaned));
       } catch (e) {}
@@ -235,11 +258,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }, (err) => console.warn('Firestore CatalogItems sync error:', err));
 
+    // 5. Sync Categories Collection
+    const unsubCategories = onSnapshot(collection(db!, 'categories'), (snapshot) => {
+      if (!snapshot.empty) {
+        const firestoreCategories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+        setCategories(firestoreCategories);
+      }
+    }, (err) => console.warn('Firestore Categories sync error:', err));
+
     return () => {
       unsubProducts();
       unsubQuotes();
       unsubInquiries();
       unsubCatalogs();
+      unsubCategories();
     };
   }, [isFirebaseConnected]);
 
@@ -251,6 +283,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn('localStorage setItem products failed:', e);
     }
   }, [products]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('categories', JSON.stringify(categories));
+    } catch (e) {
+      console.warn('localStorage setItem categories failed:', e);
+    }
+  }, [categories]);
 
   useEffect(() => {
     try {
@@ -489,6 +529,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Category CRUD Handlers
+  const addCategory = async (category: Omit<Category, 'id'> & { id?: string }) => {
+    const rawId = category.id?.trim() || category.name.trim();
+    const id = rawId.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `category-${Date.now()}`;
+    
+    const newCat: Category = {
+      id,
+      name: category.name.trim(),
+      description: category.description.trim(),
+      iconName: category.iconName || 'Activity'
+    };
+
+    setCategories(prev => {
+      if (prev.some(c => c.id === newCat.id)) {
+        return prev.map(c => c.id === newCat.id ? newCat : c);
+      }
+      return [...prev, newCat];
+    });
+
+    if (isFirebaseConnected && db) {
+      try {
+        const sanitized = await sanitizeForFirestore(newCat, newCat.id);
+        await setDoc(doc(db!, 'categories', newCat.id), sanitized, { merge: true });
+      } catch (err) {
+        console.error('Firebase setDoc category error:', err);
+      }
+    }
+  };
+
+  const editCategory = async (id: string, updatedFields: Partial<Category>) => {
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updatedFields } : c));
+
+    if (isFirebaseConnected && db) {
+      try {
+        const sanitized = await sanitizeForFirestore(updatedFields, id);
+        await setDoc(doc(db!, 'categories', id), sanitized, { merge: true });
+      } catch (err) {
+        console.error('Firebase edit category error:', err);
+      }
+    }
+  };
+
+  const deleteCategory = async (id: string) => {
+    setCategories(prev => prev.filter(c => c.id !== id));
+
+    if (isFirebaseConnected && db) {
+      try {
+        await deleteDoc(doc(db!, 'categories', id));
+      } catch (err) {
+        console.error('Firebase deleteDoc category error:', err);
+      }
+    }
+  };
+
   // Sync All Catalog Items to Cloud Firestore & Storage Buckets
   const syncAllToCloud = async (
     onProgress?: (msg: string, current: number, total: number) => void
@@ -659,6 +753,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         }
         count++;
+      }
+
+      // 5. Sync Categories to Firestore
+      for (const cat of categories) {
+        if (isFirebaseConnected && db) {
+          try {
+            const sanitizedCategory = await sanitizeForFirestore(cat, cat.id);
+            await setDoc(doc(db!, 'categories', cat.id), sanitizedCategory, { merge: true });
+          } catch (err: any) {
+            console.error(`Firestore save error for category ${cat.id}:`, err);
+          }
+        }
       }
 
       setCatalogItems(updatedCatalogItems);
@@ -914,6 +1020,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addProduct,
       editProduct,
       deleteProduct,
+      addCategory,
+      editCategory,
+      deleteCategory,
       addCatalogItem,
       editCatalogItem,
       deleteCatalogItem,
